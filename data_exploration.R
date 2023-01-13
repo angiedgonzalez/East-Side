@@ -11,8 +11,14 @@ plot_data <- read.csv("general_plot_data_new.csv")
 species_data <- read.csv("species_data_expanded.csv")
 vegetation_data <- read.csv("nontreeveg.csv")
 
+### you still need to do TPH scaling on regen data. I ampretty sure you have the code in one of the data
+# sheets in excel. also, merge date into other DFs and save
+
+
+
 ## packages ##
 library(ggplot2)
 
 
-ggplot(vegetation_data) + geom_col(aes(x=Total_shrub_.cover))
+ggplot(vegetation_data) + geom_col(aes(y=Total_shrub_.cover, x=Subplot_NE.SW))
+ggplot(vegetation_data) + geom_histogram(aes(Total_shrub_.cover, fill=Subplot_NE.SW))
