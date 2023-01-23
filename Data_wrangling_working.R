@@ -18,11 +18,8 @@ lapply(Packages, library, character.only = TRUE)
 regen_data <- read.csv("post_fire_trees.csv")
 plot_data <- read.csv("general_plot_data_new.csv")
 species_data <- read.csv("species_data_expanded.csv") # file created from code below, commented out. 
-nonveg_data <- read.csv("nontreeveg.csv")
+veg_data <- read.csv("nontreeveg.csv")
 climate_data <- read.csv("climate_data_all.csv")
-
-### you still need to do TPH scaling on regen data. I ampretty sure you have the code in one of the data
-# sheets in excel. also, merge date into other DFs and save
 
 
 #checking that everything looks good.
@@ -41,15 +38,15 @@ unique(regen_data$Yr_Plot)
 ################################################################
 #KEEPING FOR REFERENCE######### SPECIES DATA FILE: before you sum TPH you want a new DF for species - expanded. 
 # we need to expand tallies. I am going to save all as DS once done w/ DFs. 3 for now
-regen_data$ntimes <- regen_data$tally # changing col name for clarity
-regen_data$ntimes[is.na(regen_data$ntimes)] <- 0 # all blanks' or NAs are now 0
-regen_data$ntimes <- regen_data$ntimes+1 # removing 0s or rows will be removed.
-species_data <- as.data.frame(lapply(regen_data, rep, regen_data$ntimes)) # rep by tally
-unique(species_data$Yr_Plot) 
-species_data <- species_data %>% subset(select=c("Yr_Plot", "Species", "Height_cm", "DBH_cm", "Bud_scar_count", "Pre_or_Post_Fire", "Top_damage.browse_Y.N"))
+#regen_data$ntimes <- regen_data$tally # changing col name for clarity
+#regen_data$ntimes[is.na(regen_data$ntimes)] <- 0 # all blanks' or NAs are now 0
+#regen_data$ntimes <- regen_data$ntimes+1 # removing 0s or rows will be removed in next step.
+#species_data <- as.data.frame(lapply(regen_data, rep, regen_data$ntimes)) # rep by tally
+#unique(species_data$Yr_Plot) 
+#species_data <- species_data %>% subset(select=c("Yr_Plot", "Species", "Height_cm", "DBH_cm", "Bud_scar_count", "Pre_or_Post_Fire", "Top_damage.browse_Y.N"))
 
 
-write.csv(species_data, "species_data_expanded.csv")
+#write.csv(species_data, "species_data_expanded.csv")
 
 ## Adding in Elevation data and checking it matches CSV
 #elev <- read.csv("elevation_data.csv")
