@@ -44,8 +44,10 @@ unique(regen_data$Yr_Plot)
 #species_data <- as.data.frame(lapply(regen_data, rep, regen_data$ntimes)) # rep by tally
 #unique(species_data$Yr_Plot) 
 #species_data <- species_data %>% subset(select=c("Yr_Plot", "Species", "Height_cm", "DBH_cm", "Bud_scar_count", "Pre_or_Post_Fire", "Top_damage.browse_Y.N"))
-
-
+# adding the proper TPH sum into the new DF.
+#regen_data <- regen_data %>% group_by(Yr_Plot) %>% summarize(TPH=sum(TPH_scaling_factor))
+#species_data <- species_data %>% subset(select=-c(TPH_scaling_factor))
+#species_data <- merge(regen_data, species_data, by=c("Yr_Plot"))
 #write.csv(species_data, "species_data_expanded.csv")
 
 ## Adding in Elevation data and checking it matches CSV
@@ -55,29 +57,26 @@ unique(regen_data$Yr_Plot)
 #write.csv(plot_data, "general_plot_data.csv")
 
 # final pull of PRISM data - 
+# found in PRISM Code - CSV file "climate" has all data. 
 
 #############################################
 #############################################################################################
 #### Wrangling ####
-regen_data <- subset(regen_data, select = c("Yr_Plot", "TPH_scaling_factor", "TPH_REGEN_ONLY"))
-plot_data <- subset(plot_data, select = c("Yr_Plot", "Aspect_SW.NE", "Fire_Name", "Fire_Yr", "Forest_type", "Fire_sev", "Distance_seedwall_m"))
 
 # summing TPH by yr_plot
-regen_data1 <- regen_data %>% group_by(Yr_Plot) %>% summarize(TPH=sum(TPH_scaling_factor), TPH_REGEN=sum(TPH_REGEN_ONLY))
 
 plot_data <- plot_data %>% rename(Aspect=Aspect_SW.NE)
 
 merged_datasets <- merge(regen_data1, plot_data, by=c("Yr_Plot"))
 
 # forest type should be lower case. Causes confusion with fire severity.
-merged_datasets$Forest_type <- tolower(merged_datasets$Forest_type)
-remove(regen_data1, regen_data) # removing unnecessary DF
+all_data$Forest_type <- tolower(all_data$Forest_type)
 
 # species_data has all and more of regen data. only need plot and merge
 
 # changing level names for fire sev - don't need this code but saving in case
 #merged_datasets <- merged_datasets %>%
-# mutate(Fire_Sev = recode(Fire_Sev, H = 'High', M = 'Moderate', L =  'Low' ))
+#mutate(Fire_Sev = recode(Fire_Sev, H = 'High', M = 'Moderate', L =  'Low' ))
 
 
 
@@ -154,7 +153,7 @@ ggplot(species_dryhigh) + geom_count(aes(y=Species, x=Fire_Name, color=..n..))+s
 remove(regen_data, regen_data1)
 
 
-# species data subset - how many post fire trees are there?
+# species data subset - how many pre fire trees are there?
 species_pre <- species_data %>% subset(Pre_or_Post_Fire=="pre")
 species_pre <- species_pre %>% subset(Bud_scar_count>6)
 levels(as.factor(species_pre$Yr_Plot))

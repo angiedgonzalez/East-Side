@@ -26,11 +26,21 @@ ggplot(vegetation_data) + geom_histogram(aes(Total_shrub_.cover, fill=Subplot_NE
 
 
 # summing TPH by yr_plot
-all_data <- species_data %>% group_by(Yr_Plot) %>% summarize(TPH=sum(TPH_scaling_factor))
 
 plot_data <- plot_data %>% rename(Aspect=Aspect_SW.NE)
 
 all_data <- merge(all_data, plot_data, by=c("Yr_Plot"))
 
+all_data <- merge(all_data, species_data, by=c("Yr_Plot"))
+all_data$Forest_type <- tolower(all_data$Forest_type)
+all_data$Species <- tolower(all_data$Species)
+unique(all_data$Species)
+
+
 ggplot(all_data) + geom_col(aes(x=Forest_type, y=TPH))
 
+all_data %>% subset(Pre_or_Post_Fire=="post") %>% ggplot() + geom_boxplot(aes(x=Forest_type, y=Height_cm, col=Species))
+all_data %>% subset(Pre_or_Post_Fire=="post") %>% ggplot() + geom_boxplot(aes(x=Fire_sev, y=Height_cm, col=Species))
+all_data %>% subset(Pre_or_Post_Fire=="post") %>% ggplot() + geom_boxplot(aes(x=Aspect, y=Height_cm, col=Species))
+
+all_data %>% subset(TPH<= 450) %>% ggplot() + geom_boxplot(aes(x=Forest_type, y=TPH))
