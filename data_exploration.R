@@ -13,6 +13,9 @@ source("Data_wrangling_working.R")
 Packages <- c ("ggplot2", "tidyverse")
 lapply(Packages, library, character.only = TRUE)
 
+### color pallettes ###
+forestcond <- c("#bc7d39", "#6fac5d","#9750a1","#677ad1")
+firecol <- c("#cb5a4c", "#965da7", "#84a955")
 
 ggplot(vegetation_data) + geom_col(aes(y=Total_shrub_.cover, x=Subplot_NE.SW))
 ggplot(vegetation_data) + geom_histogram(aes(Total_shrub_.cover, fill=Subplot_NE.SW))
@@ -21,6 +24,10 @@ ggplot(all_data) + geom_col(aes(x=Forest_type, y=TPH)) +scale_y_continuous(label
 # TPH may seem high but it makes sense. it is something across forest type
 # not plot. Plot sums make sense. 
 ggplot(all_data) + geom_col(aes(x=Forest_type, y=TPH)) +scale_y_continuous(labels = scales::comma)
+
+ggplot(all_data) + geom_boxplot(aes(x=Prefire_stage, y=TPH, fill=Prefire_stage)) +scale_y_continuous(labels = scales::comma)
+
+non_stockthreshold %>% group_by(Fire_sev, Forest_type) %>% summarise(n_distinct(Yr_Plot))
 
 # summing DF 
 
@@ -35,14 +42,22 @@ all_data %>% group_by(Yr_Plot) %>% ggplot() + geom_boxplot(aes(x=Forest_type, y=
     )+ scale_fill_manual(values=forestcond, breaks=c('d', 'm', 'c', 'w'))
 
 ### plots by forest type ####
-forestcond <- c("#bc7d39", "#6fac5d","#9750a1","#677ad1")
+
 
 ggplot(plot_data, aes(x=interaction(factor(Fire_sev, level=c('L', "M", "H")), factor(Forest_type, level=c("d", "m", "c", "w"))), y=TPH, fill=Forest_type)
 ) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma
 )+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
 ) +labs(x="Fire Severity", y="Trees Per Hectare") + scale_x_discrete(labels=c("H.c"="High", "L.c"="Low", "M.c"="Mod", "H.d"="High", "L.d"="Low", "M.d"="Mod", "H.m"="High", "L.m"="Low", "M.m"="Mod", "H.w"="High", "L.w"="Low", "M.w"="Mod")
-) + y
+)
 
+
+ggplot(plot_data, aes(x=interaction(factor(Aspect, level=c('SW', 'NE')), factor(Forest_type, level=c("d", "m", "c", "w"))), y=TPH, fill=Forest_type)
+) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma, limits=c(0, 200000)
+)+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
+) +labs(x="Fire Severity", y="Trees Per Hectare") + scale_x_discrete(labels=c("H.c"="High", "L.c"="Low", "M.c"="Mod", "H.d"="High", "L.d"="Low", "M.d"="Mod", "H.m"="High", "L.m"="Low", "M.m"="Mod", "H.w"="High", "L.w"="Low", "M.w"="Mod")
+)
+
+plot_data  %>% group_by(Forest_type) %>% summarise(n_distinct(Yr_Plot))
 
 ##### Stands below stocking threshold ##########
 non_stockthreshold <- all_data %>% group_by(Yr_Plot) %>% mutate(TPH=sum(TPH)) %>% subset(TPH <= 150) 
@@ -55,12 +70,64 @@ non_stockthreshold <- non_stockthreshold %>% group_by(Forest_type)
 # how many of each?
 non_stockthreshold  %>% summarise(n_distinct(Yr_Plot))
 # majority are dry, but very close second to moist. 
+# lets do the same graphic above, but w/ stocking densities
+ggplot(non_stockthreshold, aes(x=interaction(factor(Fire_sev, level=c('L', "M", "H")), factor(Forest_type, level=c("d", "m", "c", "w"))), y=TPH, fill=Forest_type)
+) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma
+)+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
+) +labs(x="Fire Severity", y="Trees Per Hectare") + scale_x_discrete(labels=c("H.c"="High", "L.c"="Low", "M.c"="Mod", "H.d"="High", "L.d"="Low", "M.d"="Mod", "H.m"="High", "L.m"="Low", "M.m"="Mod", "H.w"="High", "L.w"="Low", "M.w"="Mod")
+)
+
+ggplot(non_stockthreshold, aes(x=interaction(factor(Aspect, level=c('NE', 'SW')), factor(Forest_type, level=c("d", "m", "c", "w"))), y=TPH, fill=Forest_type)
+) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma
+)+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
+) +labs(x="", y="Trees Per Hectare") 
+
+# next we will look at distance to seed source.
+
+ggplot(non_stockthreshold) + geom_point(aes(x=Distance_seedwall_m, y=TPH, col=Fire_sev)
+  )
+ggplot(non_stockthreshold) + geom_point(aes(x=Distance_seedwall_m, y=TPH, col=Forest_type))
+
+ggplot(non_stockthreshold) + geom_boxplot(aes(x=Distance_seedwall_m, y=TPH, fill=Species))
+
+non_stockthreshold %>% group_by(Distance_seedwall_m>=150, Distance_seedwall_m<150) %>% summarise(n_distinct(Yr_Plot))
+non_stockthreshold %>% group_by(Distance_seedwall_m) %>% summarise(n_distinct(Yr_Plot))
+
+ggplot(non_stockthreshold, aes(x=interaction(factor(Fire_sev, level=c('L', "M", "H")), factor(Distance_seedwall_m>=150)), y=TPH, fill=Forest_type)
+) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma
+)+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
+) +labs(x="Fire Severity", y="Trees Per Hectare") + scale_x_discrete(labels=c("H.c"="High", "L.c"="Low", "M.c"="Mod", "H.d"="High", "L.d"="Low", "M.d"="Mod", "H.m"="High", "L.m"="Low", "M.m"="Mod", "H.w"="High", "L.w"="Low", "M.w"="Mod")
+)
+
+
+ggplot(non_stockthreshold, aes(x=interaction(factor(Fire_sev, level=c('L', "M", "H")), factor(Distance_seedwall_m>=150)), y=TPH, fill=Forest_type)
+) +geom_boxplot(width=0.5) + scale_y_continuous(labels = scales::comma
+)+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))+theme_classic(
+) +labs(x="Fire Severity", y="Trees Per Hectare") + scale_x_discrete(labels=c("H.c"="High", "L.c"="Low", "M.c"="Mod", "H.d"="High", "L.d"="Low", "M.d"="Mod", "H.m"="High", "L.m"="Low", "M.m"="Mod", "H.w"="High", "L.w"="Low", "M.w"="Mod")
+)
+
+
+
+non_stockthreshold %>% group_by(Distance_seedwall_m>=150, Distance_seedwall_m<150, Forest_type) %>% summarise(n_distinct(Yr_Plot))
+non_stockthreshold %>% group_by(Distance_seedwall_m>=150, Distance_seedwall_m<150, Fire_sev) %>% summarise(n_distinct(Yr_Plot))
+
+ggplot(non_stockthreshold) + geom_boxplot(aes(x=Distance_seedwall_m, y=TPH, fill=(interaction(Species, Forest_type)))
+      )
+
+# One more subset. I am curious how much pre-fire stand density there was
+
+ggplot(non_stockthreshold) + geom_boxplot(aes(x=Prefire_stage, y=TPH, fill=Forest_type)
+   )+ scale_fill_manual(values=forestcond, name="Forest Type", breaks=c('d', 'm', 'c', 'w'),labels=c("Dry", "Moist", "Cold","Wet"))
 
 
 
 
-dev.off()
-# dry forest types have lease regen - not suprising. high sev dry is almost 0. 
+
+
+
+
+########## OLD EXPLORATION ##################################
+# dry forest types have lease regen - not surprising. high sev dry is almost 0. 
 # let's take a look at it. 
 
 # zoom in for high sev dry forest sw vs ne. 
